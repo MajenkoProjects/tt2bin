@@ -17,10 +17,11 @@ Usage:
 $ tt2bin [options] input.txt output.bin
 ```
 
-The options fall into three categories:
+The options fall into four categories:
 
 * Address mappings (inputs)
 * Data mappings (outputs)
+* Default states
 * ROM Selection
 
 ```bash
@@ -40,7 +41,16 @@ This option selects which kind of ROM chip you are targetting. Currently support
 These options map EEPROM address pins to columns named in the truth table file.
 
 ```bash
---d0=col ... -d7=col
+--d0=col ... --d7=col
 ```
 
 These options map EEPROM data pins to columns named in the truth table file.
+
+```bash
+--x0=0/1 ... --x7=0/1
+```
+
+This allows you to set a default value for an output when it's not specified by the truth table.
+This is most often used to add padding to the resultant ROM file to ensure that the outputs
+are always HIGH except when needed to be LOW.  Setting an option to 1 keeps that pin as a HIGH
+output unless otherwise explicitly controlled by the truth table data.

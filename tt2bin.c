@@ -5,6 +5,7 @@
 #include <getopt.h>
 #include <string.h>
 #include <errno.h>
+#include <stdlib.h>
 
 struct rom {
     char *name;
@@ -26,6 +27,7 @@ int main(int argc, char **argv) {
     char *apins[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     char *dpins[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
     char *cols[28] = { 0 };
+    int defaults[8] = { 0 };
 
     static struct option long_options[] = {
         {"a0",      required_argument,      0,      0 },
@@ -56,6 +58,14 @@ int main(int argc, char **argv) {
         {"d5",      required_argument,      0,      0 },
         {"d6",      required_argument,      0,      0 },
         {"d7",      required_argument,      0,      0 },
+        {"x0",      required_argument,      0,      0 },
+        {"x1",      required_argument,      0,      0 },
+        {"x2",      required_argument,      0,      0 },
+        {"x3",      required_argument,      0,      0 },
+        {"x4",      required_argument,      0,      0 },
+        {"x5",      required_argument,      0,      0 },
+        {"x6",      required_argument,      0,      0 },
+        {"x7",      required_argument,      0,      0 },
         {"rom",     required_argument,      0,      0 },
         {0,         0,                      0,      0 },
     };
@@ -75,7 +85,9 @@ int main(int argc, char **argv) {
                 apins[option_index] = optarg;
             } else if (option_index < 28) {
                 dpins[option_index - 20] = optarg;
-            } else if (option_index == 28) {
+            } else if (option_index < 36) {
+                defaults[option_index - 28] = atoi(optarg);
+            } else if (strcmp(long_options[option_index].name, "rom") == 0) {
                 for (struct rom *r = roms; r->name != NULL; r++) {
                     if (strcasecmp(r->name, optarg) == 0) {
                         selectedRom = r;
@@ -116,11 +128,10 @@ int main(int argc, char **argv) {
     }
     printf("Outputs: \n");
     for (i = 0; i < selectedRom->outputs; i++) {
-        printf("  %2d: %s\n", i, dpins[i] != 0 ? dpins[i] : "0");
+        printf("  %2d: %s\n", i, dpins[i] != 0 ? dpins[i] : defaults[i] == 0 ? "0" : "1");
     }
 
     uint8_t romData[capacity];
-    memset(romData, 0, capacity);
 
     FILE *in = fopen(infile, "r");
     if (!in) {
@@ -182,13 +193,20 @@ int main(int argc, char **argv) {
         }
     }
 
+    uint8_t defaultData = 0;
+
+    for (i = 0; i < 8; i++) {
+        defaultData |= (defaults[i] << i);
+    }
+    memset(romData, defaultData, capacity);
+
 
     while (fgets(temp, 4096, in)) {
         int colnum = 0;
         char *val = strtok(temp, "\t \r\n");
 
         uint32_t address = 0;
-        uint8_t data = 0;
+        uint8_t data = defaultData;
 
         while (val) {
             int map = colmap[colnum];
@@ -202,6 +220,8 @@ int main(int argc, char **argv) {
                 map &= 0xFFFF;
                 if (val[0] == '1') {
                     address |= 1 << map;
+                } else {
+                    address &= ~(1 << map);
                 }
             }
 
@@ -209,6 +229,8 @@ int main(int argc, char **argv) {
                 map &= 0xFFFF;
                 if (val[0] == '1') {
                     data |= 1 << map;
+                } else {
+                    data &= ~(1 << map);
                 }
             }
             
