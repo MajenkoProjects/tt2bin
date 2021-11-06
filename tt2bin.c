@@ -124,11 +124,11 @@ int main(int argc, char **argv) {
 
     printf("Inputs: \n");
     for (i = 0; i < selectedRom->inputs; i++) {
-        printf("  %2d: %s\n", i, apins[i] != 0 ? apins[i] : "GND");
+        printf("  A%2d: %s\n", i, apins[i] != 0 ? apins[i] : "GND");
     }
     printf("Outputs: \n");
     for (i = 0; i < selectedRom->outputs; i++) {
-        printf("  %2d: %s\n", i, dpins[i] != 0 ? dpins[i] : defaults[i] == 0 ? "0" : "1");
+        printf("  D%2d: %s\n", i, dpins[i] != 0 ? dpins[i] : defaults[i] == 0 ? "0" : "1");
     }
 
     uint8_t romData[capacity];
